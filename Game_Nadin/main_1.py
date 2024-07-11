@@ -54,12 +54,25 @@ def start_window(screen):
 
 def load_level(name):
     fullname = os.path.join("data", name)
-    with open(fullname) as f_map:
-        map_list = [x.strip() for x in f_map]
-    max_len = max(map(len, map_list))
-    print(map_list, max_len)
-    map_list = [x.ljust(max_len, '.') for x in map_list]
-    return map_list
+    if not os.path.isfile(fullname):
+        print(f"{fullname} не найден\n, выберите labirint.txt, map2.txt, map3.txt")
+        sys.exit()
+    try:
+        with open(fullname) as f_map:
+            map_list = [x.strip() for x in f_map]
+        if map_list:
+            max_len = max(map(len, map_list))
+            print(map_list, max_len)
+        else:
+            max_len = 11
+            map_list = ['.'] * 10 + ['@']
+
+        map_list = [x.ljust(max_len, '.') for x in map_list]
+        return map_list
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
+
 
 
 def generate_level(level):
@@ -109,35 +122,36 @@ class Tile(pygame.sprite.Sprite):
             x * Tile.tile_width, y * Tile.tile_height)
 
 
-def move(player, par):
+def move(name, player, par):
     x, y = player.x, player.y
     print(x, y)
-    plan = load_level('labirint.txt')
+    plan = load_level(name)
     print(plan, len(plan[0]), len(plan))
     if 0 <= x <= len(plan[0]) and 0 <= y <= len(plan):
         if par == 'up':
             if y - 1 >= 0 and (plan[y - 1][x] == '.' or plan[y - 1][x] == '@'):
                 player.mover(0, -1)
         elif par == 'down':
-            if y + 1 <= len(plan) and (plan[y + 1][x] == '.' or plan[y + 1][x] == '@'):
+            if y + 1 < len(plan) and (plan[y + 1][x] == '.' or plan[y + 1][x] == '@'):
                 player.mover(0, 1)
         elif par == 'left':
             if x - 1 >= 0 and (plan[y][x - 1] == '.' or plan[y][x - 1] == '@'):
                 player.mover(-1, 0)
         elif par == 'right':
-            if x + 1 <= len(plan[0]) and (plan[y][x + 1] == '.' or plan[y][x + 1] == '@'):
+            if x + 1 < len(plan[0]) and (plan[y][x + 1] == '.' or plan[y][x + 1] == '@'):
                 player.mover(1, 0)
 
 
 
 def main():
     pygame.init()
-
+    print('Выберите уровень: labirint.txt, map2.txt, map3.txt, map3')
+    name = input()
     screen = pygame.display.set_mode(WIND_SIZE)
     clock = pygame.time.Clock()
     pygame.display.set_caption('Tiles')
     start_window(screen)
-    player, level_x, level_y = generate_level(load_level('labirint.txt'))
+    player, level_x, level_y = generate_level(load_level(name))
 
     running = True
     while running:
@@ -146,13 +160,13 @@ def main():
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    move(player, 'up')
+                    move(name, player, 'up')
                 if event.key == pygame.K_DOWN:
-                    move(player, 'down')
+                    move(name, player, 'down')
                 if event.key == pygame.K_LEFT:
-                    move(player, 'left')
+                    move(name, player, 'left')
                 if event.key == pygame.K_RIGHT:
-                    move(player, 'right')
+                    move(name, player, 'right')
         screen.fill((102, 25, 89))
         all_sprites.draw(screen)
         hero_sprites.draw(screen)
